@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Font Size Calculator</title>
+</head>
+<body>
+    <script>
+        // Function to calculate scaled font size
+        function calculateScaledFontSize() {
+            // Prompt the user for original font size
+            var originalFontSize = parseFloat(prompt("Enter the original font size (in pixels):"));
+            
+            // Prompt the user for scale factor
+            var scaleFactor = parseFloat(prompt("Enter the scale factor:"));
+
+            // Check if inputs are valid numbers
+            if (!isNaN(originalFontSize) && !isNaN(scaleFactor)) {
+                // Calculate scaled font size
+                var scaledFontSize = originalFontSize * scaleFactor;
+
+                // Round the scaled font size to the nearest integer
+                scaledFontSize = Math.round(scaledFontSize);
+
+                // Display the result
+                alert("Scaled font size: " + scaledFontSize + "px");
+            } else {
+                // If inputs are not valid numbers, show an error message
+                alert("Please enter valid numbers.");
+            }
+        }
+
+        // Call the function when the page loads
+        calculateScaledFontSize();
+    </script>
+</body>
+</html>
