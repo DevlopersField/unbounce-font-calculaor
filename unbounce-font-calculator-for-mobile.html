@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Font Size Calculator</title>
+</head>
+<body>
+    <h2>Font Size Calculator</h2>
+    <label for="originalFontSize">Original Font Size (px):</label>
+    <input type="number" id="originalFontSize">
+    <br>
+    <label for="scaleFactor">Scale Factor:</label>
+    <input type="number" id="scaleFactor">
+    <br>
+    <button onclick="calculateScaledFontSize()">Calculate</button>
+    <p id="result"></p>
+
+    <script>
+        // Function to calculate scaled font size
+        function calculateScaledFontSize() {
+            // Get original font size and scale factor from inputs
+            var originalFontSize = parseFloat(document.getElementById("originalFontSize").value);
+            var scaleFactor = parseFloat(document.getElementById("scaleFactor").value);
+
+            // Check if inputs are valid numbers
+            if (!isNaN(originalFontSize) && !isNaN(scaleFactor)) {
+                // Calculate scaled font size
+                var scaledFontSize = originalFontSize * scaleFactor;
+
+                // Round the scaled font size to the nearest integer
+                scaledFontSize = Math.round(scaledFontSize);
+
+                // Display the result on the page
+                document.getElementById("result").innerHTML = "Scaled font size: " + scaledFontSize + "px";
+            } else {
+                // If inputs are not valid numbers, show an error message
+                document.getElementById("result").innerHTML = "Please enter valid numbers.";
+            }
+        }
+    </script>
+</body>
+</html>
