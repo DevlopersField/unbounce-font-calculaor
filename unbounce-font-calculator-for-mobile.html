@@ -1,71 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Font Size Calculator</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(45deg, #ECECEC, #FFFFFF);
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            text-align: center;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        input, button {
-            margin: 5px;
-            padding: 5px;
-            font-size: 16px;
-        }
-        #result {
-            margin-top: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unbounce Font % Converter</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #F9FAFB;
+    color: #111827;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: #111827;
+  }
+  p.sub {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 0 0 24px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  input[type="number"]:focus {
+    border-color: #2563EB;
+  }
+  .result {
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .result .pct {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2563EB;
+    line-height: 1.1;
+  }
+  .result .note {
+    font-size: 12px;
+    color: #6B7280;
+    margin-top: 6px;
+  }
+  .hint {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h2>Font Size Calculator</h2>
-        <label for="originalFontSize">Original Font Size (px):</label>
-        <input type="number" id="originalFontSize">
-        <br>
-        <label for="scaleFactor">Scale Factor:</label>
-        <input type="number" id="scaleFactor">
-        <br>
-        <button onclick="calculateScaledFontSize()">Calculate</button>
-        <p id="result"></p>
+  <div class="card">
+    <h1>Unbounce Font % Converter</h1>
+    <p class="sub">Enter your desktop and mobile font sizes to get the scale %.</p>
+
+    <div class="row">
+      <div>
+        <label for="desktop">Desktop (px)</label>
+        <input type="number" id="desktop" value="52" min="1">
+      </div>
+      <div>
+        <label for="mobile">Mobile (px)</label>
+        <input type="number" id="mobile" value="26" min="1">
+      </div>
     </div>
 
-    <script>
-        // Function to calculate scaled font size
-        function calculateScaledFontSize() {
-            // Get original font size and scale factor from inputs
-            var originalFontSize = parseFloat(document.getElementById("originalFontSize").value);
-            var scaleFactor = parseFloat(document.getElementById("scaleFactor").value);
+    <div class="result">
+      <div class="pct" id="pctOutput">50%</div>
+      <div class="note" id="noteOutput">Set mobile font-size scale to 50% in Unbounce</div>
+    </div>
 
-            // Check if inputs are valid numbers
-            if (!isNaN(originalFontSize) && !isNaN(scaleFactor)) {
-                // Calculate scaled font size
-                var scaledFontSize = originalFontSize * scaleFactor;
+    <div class="hint">
+      In Unbounce, set the desktop size as your base font size, then use this % in the mobile breakpoint's font-size (or scale) field.
+    </div>
+  </div>
 
-                // Round the scaled font size to the nearest integer
-                scaledFontSize = Math.round(scaledFontSize);
+  <script>
+    const desktopInput = document.getElementById('desktop');
+    const mobileInput = document.getElementById('mobile');
+    const pctOutput = document.getElementById('pctOutput');
+    const noteOutput = document.getElementById('noteOutput');
 
-                // Display the result on the page
-                document.getElementById("result").innerHTML = "Scaled font size: " + scaledFontSize + "px";
-            } else {
-                // If inputs are not valid numbers, show an error message
-                document.getElementById("result").innerHTML = "Please enter valid numbers.";
-            }
-        }
-    </script>
+    function calculate() {
+      const desktop = parseFloat(desktopInput.value);
+      const mobile = parseFloat(mobileInput.value);
+
+      if (!desktop || !mobile || desktop <= 0 || mobile <= 0) {
+        pctOutput.textContent = '--';
+        noteOutput.textContent = 'Enter valid values above';
+        return;
+      }
+
+      const pct = (mobile / desktop) * 100;
+      const rounded = Math.round(pct * 10) / 10;
+
+      pctOutput.textContent = rounded + '%';
+      noteOutput.textContent = `Set mobile font-size scale to ${rounded}% in Unbounce`;
+    }
+
+    desktopInput.addEventListener('input', calculate);
+    mobileInput.addEventListener('input', calculate);
+  </script>
 </body>
 </html>
