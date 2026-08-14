@@ -1,36 +1,461 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Font Size Calculator</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PNG/JPG to WEBP Converter</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1f232c;
+    --border: #2a2f3a;
+    --text: #e7e9ee;
+    --text-dim: #9aa1ad;
+    --accent: #5b8cff;
+    --accent-hover: #7aa0ff;
+    --success: #3ecf8e;
+    --danger: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .wrap { width: 100%; max-width: 880px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.subtitle { color: var(--text-dim); margin: 0 0 28px; font-size: 0.95rem; }
+
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    background: var(--panel);
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--panel-2);
+  }
+  .dropzone h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .dropzone p { margin: 0; color: var(--text-dim); font-size: 0.88rem; }
+  .dropzone input { display: none; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin: 24px 0;
+    padding: 18px 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    flex-wrap: wrap;
+  }
+  .controls .quality-group { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 240px; }
+  .controls label { font-size: 0.88rem; color: var(--text-dim); white-space: nowrap; }
+  input[type=range] { flex: 1; accent-color: var(--accent); }
+  .quality-val { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 40px; text-align: right; }
+
+  select {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+  .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover:not(:disabled) { background: #262b35; }
+
+  .actions { display: flex; gap: 10px; margin: 18px 0; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  thead th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  .file-cell { display: flex; align-items: center; gap: 10px; }
+  .thumb { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; background: var(--panel-2); flex-shrink: 0; }
+  .fname { font-weight: 500; }
+  .fname-sub { color: var(--text-dim); font-size: 0.78rem; }
+  .size-arrow { color: var(--text-dim); }
+  .savings { color: var(--success); font-weight: 600; }
+  .savings.negative { color: var(--danger); }
+  .status-pending { color: var(--text-dim); }
+  .status-done { color: var(--success); }
+  .status-error { color: var(--danger); }
+  .row-actions button { padding: 6px 12px; font-size: 0.8rem; }
+  .remove-btn { background: transparent; color: var(--text-dim); padding: 4px 8px; }
+  .remove-btn:hover { color: var(--danger); }
+
+  .empty-state { text-align: center; color: var(--text-dim); padding: 40px 0; font-size: 0.88rem; }
+
+  footer { margin-top: 32px; text-align: center; color: var(--text-dim); font-size: 0.78rem; }
+</style>
 </head>
 <body>
-    <script>
-        // Function to calculate scaled font size
-        function calculateScaledFontSize() {
-            // Prompt the user for original font size
-            var originalFontSize = parseFloat(prompt("Enter the original font size (in pixels):"));
-            
-            // Prompt the user for scale factor
-            var scaleFactor = parseFloat(prompt("Enter the scale factor:"));
+<div class="wrap">
+  <h1>PNG / JPG &rarr; WEBP Converter</h1>
+  <p class="subtitle">Everything runs locally in your browser. No files are uploaded anywhere.</p>
 
-            // Check if inputs are valid numbers
-            if (!isNaN(originalFontSize) && !isNaN(scaleFactor)) {
-                // Calculate scaled font size
-                var scaledFontSize = originalFontSize * scaleFactor;
+  <div class="dropzone" id="dropzone">
+    <h3>Drop images here or click to browse</h3>
+    <p>Accepts PNG and JPG/JPEG &middot; multiple files supported</p>
+    <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,image/png,image/jpeg" multiple>
+  </div>
 
-                // Round the scaled font size to the nearest integer
-                scaledFontSize = Math.round(scaledFontSize);
+  <div class="controls">
+    <div class="quality-group">
+      <label for="quality">Quality</label>
+      <input type="range" id="quality" min="1" max="100" value="100">
+      <span class="quality-val" id="qualityVal">100</span>
+    </div>
+    <div>
+      <label for="resizeMode" style="margin-right:6px;">Max size</label>
+      <select id="resizeMode">
+        <option value="0">Original</option>
+        <option value="2560">2560px</option>
+        <option value="1920">1920px</option>
+        <option value="1280">1280px</option>
+        <option value="800">800px</option>
+      </select>
+    </div>
+  </div>
 
-                // Display the result
-                alert("Scaled font size: " + scaledFontSize + "px");
-            } else {
-                // If inputs are not valid numbers, show an error message
-                alert("Please enter valid numbers.");
-            }
-        }
+  <div class="actions">
+    <button class="btn-primary" id="convertBtn" disabled>Convert all</button>
+    <button class="btn-secondary" id="downloadAllBtn" disabled>Download all (.zip)</button>
+    <button class="btn-secondary" id="folderBtn">Select folder (auto-convert)</button>
+    <button class="btn-secondary" id="clearBtn" disabled>Clear</button>
+    <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+  </div>
 
-        // Call the function when the page loads
-        calculateScaledFontSize();
-    </script>
+  <table id="fileTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>File</th>
+        <th>Original</th>
+        <th>Converted</th>
+        <th>Savings</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="fileTbody"></tbody>
+  </table>
+
+  <div class="empty-state" id="emptyState">No images added yet.</div>
+
+  <footer>Conversion uses the Canvas API's built-in WEBP encoder (Chrome, Edge, Firefox, Safari 16+).</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function () {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const qualitySlider = document.getElementById('quality');
+  const qualityVal = document.getElementById('qualityVal');
+  const resizeMode = document.getElementById('resizeMode');
+  const convertBtn = document.getElementById('convertBtn');
+  const downloadAllBtn = document.getElementById('downloadAllBtn');
+  const folderBtn = document.getElementById('folderBtn');
+  const folderInput = document.getElementById('folderInput');
+  const clearBtn = document.getElementById('clearBtn');
+  const fileTable = document.getElementById('fileTable');
+  const fileTbody = document.getElementById('fileTbody');
+  const emptyState = document.getElementById('emptyState');
+
+  /** @type {Array<{id:number, file:File, originalUrl:string, status:string, convertedBlob:Blob|null, convertedUrl:string|null, rowEl:HTMLElement}>} */
+  let items = [];
+  let idCounter = 0;
+
+  qualitySlider.addEventListener('input', () => {
+    qualityVal.textContent = qualitySlider.value;
+  });
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+  });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  function isSupported(file) {
+    return /image\/(png|jpe?g)$/i.test(file.type) || /\.(png|jpe?g)$/i.test(file.name);
+  }
+
+  function handleFiles(fileList) {
+    const files = Array.from(fileList).filter(isSupported);
+    if (!files.length) return;
+    files.forEach(addItem);
+    refreshUI();
+  }
+
+  function addItem(file) {
+    const item = {
+      id: ++idCounter,
+      file,
+      originalUrl: URL.createObjectURL(file),
+      status: 'pending',
+      convertedBlob: null,
+      convertedUrl: null,
+    };
+    items.push(item);
+    renderRow(item);
+  }
+
+  function fmtBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function outName(file) {
+    return file.name.replace(/\.[^.]+$/, '') + '.webp';
+  }
+
+  function renderRow(item) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="file-cell">
+          <img class="thumb" src="${item.originalUrl}" alt="">
+          <div>
+            <div class="fname">${item.file.name}</div>
+            <div class="fname-sub">${outName(item.file)}</div>
+          </div>
+        </div>
+      </td>
+      <td class="orig-size">${fmtBytes(item.file.size)}</td>
+      <td class="conv-size">&mdash;</td>
+      <td class="savings-cell">&mdash;</td>
+      <td class="status-cell status-pending">Pending</td>
+      <td class="row-actions">
+        <button class="btn-secondary dl-btn" disabled>Download</button>
+        <button class="remove-btn" title="Remove">&times;</button>
+      </td>
+    `;
+    fileTbody.appendChild(tr);
+    item.rowEl = tr;
+
+    tr.querySelector('.remove-btn').addEventListener('click', () => removeItem(item.id));
+    tr.querySelector('.dl-btn').addEventListener('click', () => downloadItem(item));
+  }
+
+  function removeItem(id) {
+    const idx = items.findIndex((i) => i.id === id);
+    if (idx === -1) return;
+    const item = items[idx];
+    item.rowEl.remove();
+    URL.revokeObjectURL(item.originalUrl);
+    if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+    items.splice(idx, 1);
+    refreshUI();
+  }
+
+  function refreshUI() {
+    const hasItems = items.length > 0;
+    fileTable.style.display = hasItems ? 'table' : 'none';
+    emptyState.style.display = hasItems ? 'none' : 'block';
+    convertBtn.disabled = !hasItems;
+    clearBtn.disabled = !hasItems;
+    downloadAllBtn.disabled = !items.some((i) => i.status === 'done');
+  }
+
+  function updateRow(item) {
+    const tr = item.rowEl;
+    const statusCell = tr.querySelector('.status-cell');
+    const convSizeCell = tr.querySelector('.conv-size');
+    const savingsCell = tr.querySelector('.savings-cell');
+    const dlBtn = tr.querySelector('.dl-btn');
+
+    statusCell.className = 'status-cell status-' + item.status;
+    if (item.status === 'pending') statusCell.textContent = 'Pending';
+    if (item.status === 'converting') statusCell.textContent = 'Converting…';
+    if (item.status === 'error') statusCell.textContent = 'Error';
+    if (item.status === 'done') {
+      statusCell.textContent = 'Done';
+      convSizeCell.textContent = fmtBytes(item.convertedBlob.size);
+      const diff = item.file.size - item.convertedBlob.size;
+      const pct = ((diff / item.file.size) * 100).toFixed(0);
+      savingsCell.textContent = (diff >= 0 ? '-' : '+') + Math.abs(pct) + '%';
+      savingsCell.className = 'savings-cell savings' + (diff < 0 ? ' negative' : '');
+      dlBtn.disabled = false;
+    }
+  }
+
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function convertItem(item) {
+    item.status = 'converting';
+    updateRow(item);
+    try {
+      const img = await loadImage(item.file);
+      const maxDim = parseInt(resizeMode.value, 10);
+      let { width, height } = img;
+      if (maxDim && (width > maxDim || height > maxDim)) {
+        const scale = maxDim / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(img.src);
+
+      const quality = parseInt(qualitySlider.value, 10) / 100;
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode failed'))), 'image/webp', quality);
+      });
+
+      item.convertedBlob = blob;
+      item.convertedUrl = URL.createObjectURL(blob);
+      item.status = 'done';
+    } catch (err) {
+      console.error(err);
+      item.status = 'error';
+    }
+    updateRow(item);
+  }
+
+  convertBtn.addEventListener('click', async () => {
+    convertBtn.disabled = true;
+    const pending = items.filter((i) => i.status === 'pending' || i.status === 'error');
+    for (const item of pending) {
+      await convertItem(item);
+    }
+    refreshUI();
+  });
+
+  function downloadItem(item) {
+    const a = document.createElement('a');
+    a.href = item.convertedUrl;
+    a.download = outName(item.file);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  async function downloadZip(list, folderName) {
+    if (!list.length) return;
+    const zip = new JSZip();
+    const folder = folderName ? zip.folder(folderName) : zip;
+    list.forEach((item) => {
+      folder.file(outName(item.file), item.convertedBlob);
+    });
+    const content = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = (folderName || 'converted-webp') + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  downloadAllBtn.addEventListener('click', async () => {
+    const done = items.filter((i) => i.status === 'done');
+    if (!done.length) return;
+    if (done.length === 1) {
+      downloadItem(done[0]);
+      return;
+    }
+    await downloadZip(done, 'webp-converted');
+  });
+
+  folderBtn.addEventListener('click', () => folderInput.click());
+  folderInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files).filter(isSupported);
+    folderInput.value = '';
+    if (!files.length) return;
+
+    const newItems = files.map((file) => {
+      const item = {
+        id: ++idCounter,
+        file,
+        originalUrl: URL.createObjectURL(file),
+        status: 'pending',
+        convertedBlob: null,
+        convertedUrl: null,
+      };
+      items.push(item);
+      renderRow(item);
+      return item;
+    });
+    refreshUI();
+
+    convertBtn.disabled = true;
+    for (const item of newItems) {
+      await convertItem(item);
+    }
+    refreshUI();
+
+    await downloadZip(newItems.filter((i) => i.status === 'done'), 'webp-converted');
+  });
+
+  clearBtn.addEventListener('click', () => {
+    items.forEach((item) => {
+      URL.revokeObjectURL(item.originalUrl);
+      if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+    });
+    items = [];
+    fileTbody.innerHTML = '';
+    refreshUI();
+  });
+})();
+</script>
 </body>
 </html>
