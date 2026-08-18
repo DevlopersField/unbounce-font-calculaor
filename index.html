@@ -255,8 +255,9 @@
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
   }
 
-  function outName(file) {
-    return file.name.replace(/\.[^.]+$/, '') + '.webp';
+  function outName(item) {
+    if (item.keptOriginal) return item.file.name;
+    return item.file.name.replace(/\.[^.]+$/, '') + '.webp';
   }
 
   function renderRow(item) {
@@ -267,7 +268,7 @@
           <img class="thumb" src="${item.originalUrl}" alt="">
           <div>
             <div class="fname">${item.file.name}</div>
-            <div class="fname-sub">${outName(item.file)}</div>
+            <div class="fname-sub">${outName(item)}</div>
           </div>
         </div>
       </td>
@@ -319,12 +320,20 @@
     if (item.status === 'converting') statusCell.textContent = 'Converting…';
     if (item.status === 'error') statusCell.textContent = 'Error';
     if (item.status === 'done') {
-      statusCell.textContent = 'Done';
-      convSizeCell.textContent = fmtBytes(item.convertedBlob.size);
-      const diff = item.file.size - item.convertedBlob.size;
-      const pct = ((diff / item.file.size) * 100).toFixed(0);
-      savingsCell.textContent = (diff >= 0 ? '-' : '+') + Math.abs(pct) + '%';
-      savingsCell.className = 'savings-cell savings' + (diff < 0 ? ' negative' : '');
+      tr.querySelector('.fname-sub').textContent = outName(item);
+      if (item.keptOriginal) {
+        statusCell.textContent = 'Kept original (WEBP was larger)';
+        convSizeCell.textContent = fmtBytes(item.convertedBlob.size);
+        savingsCell.textContent = '0%';
+        savingsCell.className = 'savings-cell';
+      } else {
+        statusCell.textContent = 'Done';
+        convSizeCell.textContent = fmtBytes(item.convertedBlob.size);
+        const diff = item.file.size - item.convertedBlob.size;
+        const pct = ((diff / item.file.size) * 100).toFixed(0);
+        savingsCell.textContent = (diff >= 0 ? '-' : '+') + Math.abs(pct) + '%';
+        savingsCell.className = 'savings-cell savings' + (diff < 0 ? ' negative' : '');
+      }
       dlBtn.disabled = false;
     }
   }
@@ -358,12 +367,18 @@
       URL.revokeObjectURL(img.src);
 
       const quality = parseInt(qualitySlider.value, 10) / 100;
-      const blob = await new Promise((resolve, reject) => {
+      const webpBlob = await new Promise((resolve, reject) => {
         canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('encode failed'))), 'image/webp', quality);
       });
 
-      item.convertedBlob = blob;
-      item.convertedUrl = URL.createObjectURL(blob);
+      if (webpBlob.size < item.file.size) {
+        item.convertedBlob = webpBlob;
+        item.keptOriginal = false;
+      } else {
+        item.convertedBlob = item.file;
+        item.keptOriginal = true;
+      }
+      item.convertedUrl = URL.createObjectURL(item.convertedBlob);
       item.status = 'done';
     } catch (err) {
       console.error(err);
@@ -384,7 +399,7 @@
   function downloadItem(item) {
     const a = document.createElement('a');
     a.href = item.convertedUrl;
-    a.download = outName(item.file);
+    a.download = outName(item);
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -395,7 +410,7 @@
     const zip = new JSZip();
     const folder = folderName ? zip.folder(folderName) : zip;
     list.forEach((item) => {
-      folder.file(outName(item.file), item.convertedBlob);
+      folder.file(outName(item), item.convertedBlob);
     });
     const content = await zip.generateAsync({ type: 'blob' });
     const a = document.createElement('a');
